@@ -1,1 +1,1 @@
-# Command-Line Rust - catr
+# Command-Line Rust - catr 🦀
