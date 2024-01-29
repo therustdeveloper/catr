@@ -4,7 +4,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use std::error::Error;
 use std::fs;
 
-type TestResult = Result<(), Box<dyn Error>>;
+type ProgResult = Result<(), Box<dyn Error>>;
 
 const PRG: &str = "catr";
 const EMPTY: &str = "tests/inputs/empty.txt";
@@ -14,7 +14,7 @@ const BUSTLE: &str = "tests/inputs/the-bustle.txt";
 
 // --------------------------------------------------
 #[test]
-fn usage() -> TestResult {
+fn usage() -> ProgResult {
     for flag in &["-h", "--help"] {
         Command::cargo_bin(PRG)?
             .arg(flag)
@@ -41,7 +41,7 @@ fn gen_bad_file() -> String {
 
 // --------------------------------------------------
 #[test]
-fn skips_bad_file() -> TestResult {
+fn skips_bad_file() -> ProgResult {
     let bad = gen_bad_file();
     let expected = format!("{}: .* [(]os error 2[)]", bad);
     Command::cargo_bin(PRG)?
@@ -53,7 +53,7 @@ fn skips_bad_file() -> TestResult {
 }
 
 // --------------------------------------------------
-fn run(args: &[&str], expected_file: &str) -> TestResult {
+fn run(args: &[&str], expected_file: &str) -> ProgResult {
     let expected = fs::read_to_string(expected_file)?;
     Command::cargo_bin(PRG)?
         .args(args)
@@ -68,7 +68,7 @@ fn run_stdin(
     input_file: &str,
     args: &[&str],
     expected_file: &str,
-) -> TestResult {
+) -> ProgResult {
     let input = fs::read_to_string(input_file)?;
     let expected = fs::read_to_string(expected_file)?;
     Command::cargo_bin(PRG)?
@@ -82,13 +82,13 @@ fn run_stdin(
 
 // --------------------------------------------------
 #[test]
-fn bustle_stdin() -> TestResult {
+fn bustle_stdin() -> ProgResult {
     run_stdin(BUSTLE, &["-"], "tests/expected/the-bustle.txt.stdin.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn bustle_stdin_n() -> TestResult {
+fn bustle_stdin_n() -> ProgResult {
     run_stdin(
         BUSTLE,
         &["-n", "-"],
@@ -98,7 +98,7 @@ fn bustle_stdin_n() -> TestResult {
 
 // --------------------------------------------------
 #[test]
-fn bustle_stdin_b() -> TestResult {
+fn bustle_stdin_b() -> ProgResult {
     run_stdin(
         BUSTLE,
         &["-b", "-"],
@@ -108,55 +108,55 @@ fn bustle_stdin_b() -> TestResult {
 
 // --------------------------------------------------
 #[test]
-fn empty() -> TestResult {
+fn empty() -> ProgResult {
     run(&[EMPTY], "tests/expected/empty.txt.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn empty_n() -> TestResult {
+fn empty_n() -> ProgResult {
     run(&["-n", EMPTY], "tests/expected/empty.txt.n.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn empty_b() -> TestResult {
+fn empty_b() -> ProgResult {
     run(&["-b", EMPTY], "tests/expected/empty.txt.b.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn fox() -> TestResult {
+fn fox() -> ProgResult {
     run(&[FOX], "tests/expected/fox.txt.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn fox_n() -> TestResult {
+fn fox_n() -> ProgResult {
     run(&["-n", FOX], "tests/expected/fox.txt.n.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn fox_b() -> TestResult {
+fn fox_b() -> ProgResult {
     run(&["-b", FOX], "tests/expected/fox.txt.b.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn spiders() -> TestResult {
+fn spiders() -> ProgResult {
     run(&[SPIDERS], "tests/expected/spiders.txt.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn spiders_n() -> TestResult {
+fn spiders_n() -> ProgResult {
     run(&["--number", SPIDERS], "tests/expected/spiders.txt.n.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn spiders_b() -> TestResult {
+fn spiders_b() -> ProgResult {
     run(
         &["--number-nonblank", SPIDERS],
         "tests/expected/spiders.txt.b.out",
@@ -165,36 +165,36 @@ fn spiders_b() -> TestResult {
 
 // --------------------------------------------------
 #[test]
-fn bustle() -> TestResult {
+fn bustle() -> ProgResult {
     run(&[BUSTLE], "tests/expected/the-bustle.txt.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn bustle_n() -> TestResult {
+fn bustle_n() -> ProgResult {
     run(&["-n", BUSTLE], "tests/expected/the-bustle.txt.n.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn bustle_b() -> TestResult {
+fn bustle_b() -> ProgResult {
     run(&["-b", BUSTLE], "tests/expected/the-bustle.txt.b.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn all() -> TestResult {
+fn all() -> ProgResult {
     run(&[FOX, SPIDERS, BUSTLE], "tests/expected/all.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn all_n() -> TestResult {
+fn all_n() -> ProgResult {
     run(&[FOX, SPIDERS, BUSTLE, "-n"], "tests/expected/all.n.out")
 }
 
 // --------------------------------------------------
 #[test]
-fn all_b() -> TestResult {
+fn all_b() -> ProgResult {
     run(&[FOX, SPIDERS, BUSTLE, "-b"], "tests/expected/all.b.out")
 }

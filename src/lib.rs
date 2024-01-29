@@ -1,81 +1,79 @@
-use clap::{App, Arg};
+use clap::Parser;
 use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-#[derive(Debug)]
+#[derive(Parser,Debug)]
+#[command(
+    author = "William Munoz",
+    version,
+    about = "Incomplete `GNU cat` in Rust for learning purposes"
+)]
 pub struct Config {
+    /// files to cat
+    #[arg(name = "FILES", default_value = "-")]
     files: Vec<String>,
+    /// print line numbers
+    #[arg(short, long = "number")]
     number_lines: bool,
+    /// print line numbers for non-blank lines
+    #[arg(short = 'b', long = "number-nonblank", conflicts_with = "number_lines")]
     number_nonblank_lines: bool,
+    /// show $ at the end of each line
+    #[arg(short = 'E', long = "show-ends")]
+    show_ends: bool,
 }
 
-type MyResult<T> = Result<T, Box<dyn Error>>;
+type ProgResult<T> = Result<T, Box<dyn Error>>;
 
-pub fn run(config: Config) -> MyResult<()> {
+pub fn run(config: Config) -> ProgResult<()> {
+    let mut line_num = 0;
     for filename in config.files {
         match open(&filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
             Ok(file) => {
-                let mut last_num = 0;
-                for (line_num, line) in file.lines().enumerate() {
+                let (width, tab_char) = if config.number_lines | config.number_nonblank_lines {
+                    (6, "\t")
+                } else {
+                    (0, "")
+                };
+                let line_end = if config.show_ends { "$" } else { "" };
+                for line in file.lines() {
                     let line = line?;
-                    if config.number_lines {
-                        println!("{:>6}\t{}", line_num + 1, line);
-                    } else if config.number_nonblank_lines {
-                        if !line.is_empty() {
-                            last_num += 1;
-                            println!("{:>6}\t{}", last_num, line);
-                        } else {
-                            println!();
-                        }
+                    let line_num_str = if config.number_lines
+                        || (config.number_nonblank_lines && !line.is_empty())
+                    {
+                        line_num += 1;
+                        line_num.to_string()
                     } else {
-                        println!("{}", line);
-                    }
+                        "".to_string()
+                    };
+                    if config.number_nonblank_lines && line.is_empty() {
+                        println!("{}", line_end)
+                    } else {
+                        println!(
+                            "{:>width$}{}{}{}",
+                            line_num_str,
+                            tab_char,
+                            line,
+                            line_end,
+                            width = width
+                        )
+                    };
                 }
-            },
+            }
         }
     }
-    Ok(())
+    Ok(()) // Return unit type in Ok variant to indicate success
 }
 
-pub fn get_args() -> MyResult<Config> {
-    let matches = App::new("catr")
-        .version("0.1.0")
-        .author("WMR <william@rustdeveloper.io>")
-        .about("Rust cat")
-        .arg(
-            Arg::with_name("files")
-                .value_name("FILE")
-                .help("Input file(s)")
-                .multiple(true)
-                .default_value("-"),
-        )
-        .arg(
-            Arg::with_name("number")
-                .short("n")
-                .long("number")
-                .help("Number lines")
-                .takes_value(false)
-                .conflicts_with("number_nonblank"),
-        )
-        .arg(
-            Arg::with_name("number_nonblank")
-                .short("b")
-                .long("number-nonblank")
-                .help("Number non-blank lines")
-                .takes_value(false),
-        )
-        .get_matches();
+pub fn get_args() -> ProgResult<Config> {
+    let config = Config::parse();
 
-    Ok(Config {
-        files: matches.values_of_lossy("files").unwrap(),
-        number_lines: matches.is_present("number"),
-        number_nonblank_lines: matches.is_present("number_nonblank"),
-    })
+    Ok(config)
 }
 
-fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
+fn open(filename: &str) -> ProgResult<Box<dyn BufRead>> {
     match filename {
         "-" => Ok(Box::new(BufReader::new(io::stdin()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
